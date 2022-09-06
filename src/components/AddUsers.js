@@ -1,8 +1,7 @@
-import React, {useMemo, useState} from 'react';
+import React, { useMemo, useState } from 'react';
 
-const AddUsers = ({users, setUsers, setStart}) => {
-    const [value, setValue] = useState("");
-  const [error, setError] = useState("");
+const AddUsers = ({ users, setUsers, setStart }) => {
+  const [value, setValue] = useState("");
 
   const addUser = (newName) => {
     setValue("");
@@ -14,7 +13,7 @@ const AddUsers = ({users, setUsers, setStart}) => {
       alert("это имя уже занято");
     } else {
       setUsers((prev) => {
-        return [...prev, { name: newName, points: 0 }];
+        return [...prev, { name: newName, points: 0, hints:['звонок другу','лучший и худший','два средних'] }];
       });
     }
   };
@@ -27,29 +26,29 @@ const AddUsers = ({users, setUsers, setStart}) => {
     }
   }, [users]);
 
-    return (
-        <div className='flex-container'>
-        <div className='super-game'>
-            <div className='list-users' >
-            {renderUsers}
-            </div>
-          <label className='flex-container' >
-            <span>Имя игрока</span>
-            <input
-            className='input bigger'
-              value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-              }}
-              onKeyPress={(e) => e.key === "Enter" && addUser(e.target.value)}
-            />
-          </label>
+  return (
+    <div className='flex-container'>
+      <div className='super-game'>
+        <div className='list-users' >
+          {renderUsers}
         </div>
-       
-          <button className='button button-wrapper' onClick={() => setStart(true)}>К игре</button>
-    
+        <label className='flex-container' >
+          <span>Имя игрока</span>
+          <input
+            className='input bigger'
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+            }}
+            onKeyPress={(e) => e.key === "Enter" && addUser(e.target.value)}
+          />
+        </label>
       </div>
-    );
+
+      <button className='button button-wrapper' onClick={() => setStart(true)}>К игре</button>
+
+    </div>
+  );
 };
 
 export default AddUsers;

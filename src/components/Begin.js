@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import './style.css'
 
 const Begin = ({setStart, setRulles, rulles}) => {
-    
-
 
     useEffect(() => {
         let i = 0;

@@ -2,6 +2,8 @@
 import { newQuestion, hints } from "../mock";
 import { useEffect, useState } from "react";
 import AddUsers from "../components/AddUsers";
+import ComadSuperGame from "../components/ComadSuperGame";
+import ComadPoints from "../components/ComadPoints";
 
 
 
@@ -9,35 +11,51 @@ const ComandGame = () => {
     const [question, setQuestion] = useState(0);
     const [start, setStart] = useState(false)
     const [disabled, setDisabled] = useState([]);
-    const [disbledHints, setDisabledHints] = useState([]);
+    const [disbledHints, setDisabledHints] = useState({});
     const [users, setUsers] = useState([]);
     const [currentUsers, setCurrentUsers] = useState('');
     const [disabledUsers, setDisabledUsers] = useState([]);
-
-
-
-
     const [media, setMedia] = useState('');
     const [videoAnswer, setVideoAnswer] = useState('');
     const [mediaType, setMediaType] = useState('')
-
+    const [currentDisabledAnswer, setCurrentDisabledAnswer] = useState([]);
+    const [nextQuestion, setNextQuestion] = useState(false);
+    const [superGame, setSuperGame] = useState(false)
+    const [end, setEnd] = useState(false)
+    const [winner, setWinner]=useState('');
+    
+    useEffect(()=>{
+        if(end){
+        const sortUsers = users.sort((a, b) => a?.points - b?.points);
+            setWinner(sortUsers[sortUsers.length-1].name)
+        }
+    },[end])
 
     const renderCurrentUssers = (arrUsers) => {
         const sortUsers = arrUsers.sort((a, b) => a?.points - b?.points);
         setCurrentUsers(sortUsers[0]?.name || users[0]?.name)
     }
 
-    useEffect(() => {
-        renderCurrentUssers(users);
-    }, [question, start])
-
     const lastQuestion = () => {
         return question < newQuestion.length;
     }
 
+    useEffect(() => {
+        if (lastQuestion()) {
+            renderCurrentUssers(users);
+
+        } else {
+            setSuperGame(true)
+                ;
+        }
+    }, [question, start])
+
+
+
 
 
     const click = (points, i) => {
+        setCurrentDisabledAnswer([]);
         setDisabled((prev) => {
             return [...prev, i]
         })
@@ -57,9 +75,7 @@ const ComandGame = () => {
 
     useEffect(() => {
         if (start && disabledUsers.length >= users.length) {
-            setQuestion(question + 1);
-            setDisabled([]);
-            setDisabledUsers([]);
+            setNextQuestion(true)
         } else {
             const filterUsers = users.filter(({ name }) => !disabledUsers.includes(name))
             renderCurrentUssers(filterUsers);
@@ -75,7 +91,7 @@ const ComandGame = () => {
                     <div className="button-block" >
                         {newQuestion[question].answers.map((item, i) => {
                             return (
-                                <button disabled={disabled.includes(i)} className="button" onClick={() => click(item.points, i)}>
+                                <button disabled={disabled.includes(i) || currentDisabledAnswer.includes(item)} className="button" onClick={() => click(item.points, i)}>
                                     {disabled.includes(i) ? item.points : item.answer}
                                 </button>
                             );
@@ -85,51 +101,6 @@ const ComandGame = () => {
                 </div>
             );
     };
-
-    const randomDisabled = (p) => {
-        let arr = [];
-        newQuestion[question].answers.forEach((item, i) => {
-            if (!item.right) {
-                arr.push(i);
-            }
-        })
-
-        if (p === 50) {
-            const rn = Math.floor(Math.random() * 3)
-            arr.splice(rn, 1);
-            setDisabled([...arr])
-        }
-        setDisabled([...arr])
-
-    }
-
-    const hintsClick = (name, i) => {
-        switch (name) {
-            case 'звонок другу':
-                break;
-            case '50 на 50':
-                randomDisabled(50)
-                break;
-            case '70 на 30':
-                randomDisabled()
-                break;
-            default:
-                break;
-
-        }
-
-        setDisabledHints((prev) => {
-            return [...prev, i]
-        })
-    }
-
-    const renderHints = () => {
-        if (lastQuestion()) {
-            return hints.map((item, i) => {
-                return <button onClick={() => hintsClick(item, i)} disabled={disbledHints.includes(i) || disabled.length > 0} className="button-hints" >{item}</button>;
-            });
-        }
-    }
 
     useEffect(() => {
         if (lastQuestion() && newQuestion[question]?.media?.question) {
@@ -160,30 +131,60 @@ const ComandGame = () => {
         }
     }
 
-    const renderPoints = users.map(({ name, points }) => {
-        return <h2 className="flex-container" >{name}
-            <div className="circle" >
-                {`${points}`}
-            </div>
-        </h2>
+    const bestOrlose = () => {
+        const sortAnswer = newQuestion[question].answers.sort((a, b) => a.points - b.points);
+        setCurrentDisabledAnswer([sortAnswer[1], sortAnswer[2]])
 
-    })
+    }
+
+    const centerPoints = () => {
+        const sortAnswer = newQuestion[question].answers.sort((a, b) => a.points - b.points);
+        setCurrentDisabledAnswer([sortAnswer[0], sortAnswer[sortAnswer.length - 1]])
+
+    }
+
+    const hintsClick = (hint) => {
+        switch (hint) {
+            case 'лучший и худший':
+                bestOrlose();
+                break;
+            case 'два средних':
+                centerPoints()
+                break;
+            default:
+                break;
+        }
+        const disHin = disbledHints[currentUsers] || [];
+
+        disHin.push(hint);
+
+        setDisabledHints((prev) => {
+            return { ...prev, [currentUsers]: disHin }
+        })
+    }
 
     return (
         <>
-            {start ? media ? <div className="flex-container" >
+            {end ? <div>
+                <h1>Победил {winner}</h1>
+                <ComadPoints users={users} hint={false}  />
+            </div> : superGame ? <ComadSuperGame users={users} setUsers={setUsers} setEnd={setEnd} /> : start ? media ? <div className="flex-container" >
                 {renderMedia()}
                 <button className="button" onClick={onQuestion} >К вопросу</button>
             </div>
                 :
                 <div className="flex-container">
-                    <div className="flex-container flex-row">
-                        {renderPoints}
-                    </div>
+                    {<ComadPoints users={users} hint={true} disbledHints={disbledHints} currentUsers={currentUsers} hintsClick={hintsClick} />}
                     <h1>{`Отвечает ${currentUsers}`}</h1>
 
                     {renderQuestion()}
-                    <div className="button-block">{renderHints()}</div>
+                    {nextQuestion && <button onClick={() => {
+                        setQuestion(question + 1);
+                        setNextQuestion(false);
+                        setDisabled([]);
+                        setDisabledUsers([]);
+                    }} className="button" >следующий вопрос</button>}
+                    {/* <div className="button-block">{renderHints()}</div> */}
                     <h2>{`Вопрос номер ${question + 1}`}</h2>
 
                 </div> : <AddUsers setStart={setStart} users={users} setUsers={setUsers} />

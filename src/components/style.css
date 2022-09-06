@@ -68,3 +68,10 @@ p{
     font-size: 30px;
     margin-bottom: 50px;
 }
+
+.span{
+    font-size: 30px;
+}
+.circle-non-margin{
+    margin-left: 0!important;
+}

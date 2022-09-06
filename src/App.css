@@ -37,6 +37,21 @@
   max-width: 650px;
 }
 
+.no-wrap{
+  flex-wrap: nowrap;
+}
+
+.max-width{
+  width: 100% !important;
+}
+
+
+.user-border{
+  border:1px solid white;
+  padding: 10px;
+  border-radius:10px;
+}
+
 .button-hints{
   display: flex;
   align-items:center;
